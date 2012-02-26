@@ -50,13 +50,14 @@ libxs_la_SOURCES = \
     object.hpp \
     options.hpp \
     own.hpp \
+    pair.hpp \
     pgm_receiver.hpp \
     pgm_sender.hpp \
     pgm_socket.hpp \
     pipe.hpp \
     platform.hpp \
     poll.hpp \
-    pair.hpp \
+    prefix_filter.hpp \
     pub.hpp \
     pull.hpp \
     push.hpp \
@@ -114,6 +115,7 @@ libxs_la_SOURCES = \
     pgm_socket.cpp \
     pipe.cpp \
     poll.cpp \
+    prefix_filter.cpp \
     pull.cpp \
     push.cpp \
     reaper.cpp \
