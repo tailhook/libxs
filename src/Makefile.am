@@ -45,7 +45,6 @@ libxs_la_SOURCES = \
     likely.hpp \
     mailbox.hpp \
     msg.hpp \
-    mtrie.hpp \
     mutex.hpp \
     object.hpp \
     options.hpp \
@@ -105,7 +104,6 @@ libxs_la_SOURCES = \
     lb.cpp \
     mailbox.cpp \
     msg.cpp \
-    mtrie.cpp \
     object.cpp \
     options.cpp \
     own.cpp \
