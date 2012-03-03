@@ -25,7 +25,7 @@ int XS_TEST_MAIN ()
     fprintf (stderr, "resubscribe test running...\n");
 
     //  Create the basic infrastructure.
-    void *ctx = xs_init (1);
+    void *ctx = xs_init ();
     assert (ctx);
     void *xpub = xs_socket (ctx, XS_XPUB);
     assert (xpub);
@@ -54,7 +54,7 @@ int XS_TEST_MAIN ()
     //  Tear down the connection.
     rc = xs_close (xpub);
     assert (rc == 0);
-    xs_sleep (1);
+    sleep (1);
 
     //  Re-establish the connection.
     xpub = xs_socket (ctx, XS_XPUB);
