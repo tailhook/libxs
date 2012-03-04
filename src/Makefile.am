@@ -13,7 +13,8 @@ lib_LTLIBRARIES = libxs.la
 
 pkgconfig_DATA = libxs.pc
 
-include_HEADERS = ../include/xs.h
+include_HEADERS = ../include/xs.h ../include/xs_filter.h
+
 endif
 
 libxs_la_SOURCES = \
