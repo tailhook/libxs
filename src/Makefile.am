@@ -25,6 +25,7 @@ libxs_la_SOURCES = \
     clock.hpp \
     command.hpp \
     config.hpp \
+    core.hpp \
     ctx.hpp \
     decoder.hpp \
     devpoll.hpp \
@@ -86,6 +87,7 @@ libxs_la_SOURCES = \
     ypipe.hpp \
     yqueue.hpp \
     clock.cpp \
+    core.cpp \
     ctx.cpp \
     decoder.cpp \
     devpoll.cpp \
@@ -136,8 +138,7 @@ libxs_la_SOURCES = \
     xrep.cpp \
     xreq.cpp \
     xsub.cpp \
-    xs.cpp \
-    xs_filter.cpp
+    xs.cpp
 
 if ON_MINGW
 libxs_la_LDFLAGS = -no-undefined -avoid-version -version-info @LIBXS_ABI_VERSION@ @LIBXS_EXTRA_LDFLAGS@
