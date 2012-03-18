@@ -40,18 +40,18 @@ xs::prefix_filter_t::~prefix_filter_t ()
 int xs::prefix_filter_t::subscribe (void *core_, void *subscriber_,
     const unsigned char *data_, size_t size_)
 {
-    return add (&root, data_, size_, (pipe_t*) subscriber_) ? 1 : 0;
+    return add (&root, data_, size_, subscriber_) ? 1 : 0;
 }
 
 int xs::prefix_filter_t::unsubscribe (void *core_, void *subscriber_,
     const unsigned char *data_, size_t size_)
 {
-    return rm (&root, data_, size_, (pipe_t*) subscriber_) ? 1 : 0;
+    return rm (&root, data_, size_, subscriber_) ? 1 : 0;
 }
 
 void xs::prefix_filter_t::unsubscribe_all (void *core_, void *subscriber_)
 {
-    rm (&root, (pipe_t*) subscriber_, core_);
+    rm (&root, subscriber_, core_);
 }
 
 void xs::prefix_filter_t::enumerate (void *core_)
@@ -70,7 +70,7 @@ int xs::prefix_filter_t::match (void *core_,
     while (true) {
 
         //  We've found a corresponding subscription!
-        if (current->pipes)
+        if (current->subscribers)
             return 1;
 
         //  We've checked all the data and haven't found matching subscription.
@@ -103,10 +103,11 @@ void xs::prefix_filter_t::match_all (void *core_,
     node_t *current = &root;
     while (true) {
 
-        //  Signal the pipes attached to this node.
-        if (current->pipes) {
-            for (node_t::pipes_t::iterator it = current->pipes->begin ();
-                  it != current->pipes->end (); ++it) {
+        //  Signal the subscribers attached to this node.
+        if (current->subscribers) {
+            for (node_t::subscribers_t::iterator it =
+                  current->subscribers->begin ();
+                  it != current->subscribers->end (); ++it) {
                 int rc = xs_filter_matching (core_, it->first);
                 errno_assert (rc == 0);
             }
@@ -144,7 +145,7 @@ void xs::prefix_filter_t::match_all (void *core_,
 
 void xs::prefix_filter_t::init (node_t *node_)
 {
-    node_->pipes = NULL;
+    node_->subscribers = NULL;
     node_->min = 0;
     node_->count = 0;
     node_->live_nodes = 0;
@@ -152,9 +153,9 @@ void xs::prefix_filter_t::init (node_t *node_)
 
 void xs::prefix_filter_t::close (node_t *node_)
 {
-    if (node_->pipes) {
-        delete node_->pipes;
-        node_->pipes = NULL;
+    if (node_->subscribers) {
+        delete node_->subscribers;
+        node_->subscribers = NULL;
     }
 
     if (node_->count == 1) {
@@ -174,15 +175,15 @@ void xs::prefix_filter_t::close (node_t *node_)
 }
 
 bool xs::prefix_filter_t::add (node_t *node_, const unsigned char *prefix_,
-    size_t size_, pipe_t *pipe_)
+    size_t size_, void *subscriber_)
 {
     //  We are at the node corresponding to the prefix. We are done.
     if (!size_) {
-        bool result = !node_->pipes;
-        if (!node_->pipes)
-            node_->pipes = new (std::nothrow) node_t::pipes_t;
-        node_t::pipes_t::iterator it =
-            node_->pipes->insert (node_t::pipes_t::value_type (pipe_, 0)).first;
+        bool result = !node_->subscribers;
+        if (!node_->subscribers)
+            node_->subscribers = new (std::nothrow) node_t::subscribers_t;
+        node_t::subscribers_t::iterator it = node_->subscribers->insert (
+            node_t::subscribers_t::value_type (subscriber_, 0)).first;
         ++it->second;
         return result;
     }
@@ -246,7 +247,7 @@ bool xs::prefix_filter_t::add (node_t *node_, const unsigned char *prefix_,
             ++node_->live_nodes;
             xs_assert (node_->next.node);
         }
-        return add (node_->next.node, prefix_ + 1, size_ - 1, pipe_);
+        return add (node_->next.node, prefix_ + 1, size_ - 1, subscriber_);
     }
     else {
         if (!node_->next.table [c - node_->min]) {
@@ -257,34 +258,35 @@ bool xs::prefix_filter_t::add (node_t *node_, const unsigned char *prefix_,
             xs_assert (node_->next.table [c - node_->min]);
         }
         return add (node_->next.table [c - node_->min], prefix_ + 1, size_ - 1,
-            pipe_);
+            subscriber_);
     }
 }
 
 
-void xs::prefix_filter_t::rm (node_t *node_, pipe_t *pipe_, void *arg_)
+void xs::prefix_filter_t::rm (node_t *node_, void *subscriber_, void *arg_)
 {
     unsigned char *buff = NULL;
-    rm_helper (node_, pipe_, &buff, 0, 0, arg_);
+    rm_helper (node_, subscriber_, &buff, 0, 0, arg_);
     free (buff);
 }
 
-void xs::prefix_filter_t::rm_helper (node_t *node_, pipe_t *pipe_,
+void xs::prefix_filter_t::rm_helper (node_t *node_, void *subscribers_,
     unsigned char **buff_, size_t buffsize_, size_t maxbuffsize_, void *arg_)
 {
     //  Remove the subscription from this node.
-    if (node_->pipes) {
-        node_t::pipes_t::iterator it = node_->pipes->find (pipe_);
-        if (it != node_->pipes->end ()) {
+    if (node_->subscribers) {
+        node_t::subscribers_t::iterator it =
+            node_->subscribers->find (subscribers_);
+        if (it != node_->subscribers->end ()) {
             xs_assert (it->second);
             --it->second;
             if (!it->second) {
-                node_->pipes->erase (it);
-                if (node_->pipes->empty ()) {
+                node_->subscribers->erase (it);
+                if (node_->subscribers->empty ()) {
                     int rc = xs_filter_unsubscribed (arg_, *buff_, buffsize_);
                     errno_assert (rc == 0);
-                    delete node_->pipes;
-                    node_->pipes = 0;
+                    delete node_->subscribers;
+                    node_->subscribers = 0;
                 }
             }
         }
@@ -305,8 +307,8 @@ void xs::prefix_filter_t::rm_helper (node_t *node_, pipe_t *pipe_,
     if (node_->count == 1) {
         (*buff_) [buffsize_] = node_->min;
         buffsize_++;
-        rm_helper (node_->next.node, pipe_, buff_, buffsize_, maxbuffsize_,
-            arg_);
+        rm_helper (node_->next.node, subscribers_, buff_, buffsize_,
+            maxbuffsize_, arg_);
 
         //  Prune the node if it was made redundant by the removal
         if (is_redundant (node_->next.node)) {
@@ -329,8 +331,8 @@ void xs::prefix_filter_t::rm_helper (node_t *node_, pipe_t *pipe_,
     for (unsigned short c = 0; c != node_->count; c++) {
         (*buff_) [buffsize_] = node_->min + c;
         if (node_->next.table [c]) {
-            rm_helper (node_->next.table [c], pipe_, buff_, buffsize_ + 1,
-                maxbuffsize_, arg_);
+            rm_helper (node_->next.table [c], subscribers_, buff_,
+                buffsize_ + 1, maxbuffsize_, arg_);
 
             //  Prune redudant nodes from the the trie.
             if (is_redundant (node_->next.table [c])) {
@@ -392,26 +394,27 @@ void xs::prefix_filter_t::rm_helper (node_t *node_, pipe_t *pipe_,
 }
 
 bool xs::prefix_filter_t::rm (node_t *node_, const unsigned char *prefix_,
-    size_t size_, pipe_t *pipe_)
+    size_t size_, void *subscriber_)
 {
     if (!size_) {
 
         //  Remove the subscription from this node.
-        if (node_->pipes) {
-            node_t::pipes_t::iterator it = node_->pipes->find (pipe_);
-            if (it != node_->pipes->end ()) {
+        if (node_->subscribers) {
+            node_t::subscribers_t::iterator it =
+                node_->subscribers->find (subscriber_);
+            if (it != node_->subscribers->end ()) {
                 xs_assert (it->second);
                 --it->second;
                 if (!it->second) {
-                    node_->pipes->erase (it);
-                    if (node_->pipes->empty ()) {
-                        delete node_->pipes;
-                        node_->pipes = 0;
+                    node_->subscribers->erase (it);
+                    if (node_->subscribers->empty ()) {
+                        delete node_->subscribers;
+                        node_->subscribers = 0;
                     }
                 }
             }
         }
-        return !node_->pipes;
+        return !node_->subscribers;
     }
 
     unsigned char c = *prefix_;
@@ -424,7 +427,7 @@ bool xs::prefix_filter_t::rm (node_t *node_, const unsigned char *prefix_,
     if (!next_node)
         return false;
 
-    bool ret = rm (next_node, prefix_ + 1, size_ - 1, pipe_);
+    bool ret = rm (next_node, prefix_ + 1, size_ - 1, subscriber_);
 
     if (is_redundant (next_node)) {
         close (next_node);
@@ -520,7 +523,7 @@ void xs::prefix_filter_t::list (node_t *node_, unsigned char **buff_,
     size_t buffsize_, size_t maxbuffsize_, void *arg_)
 {
     //  If this node is a subscription, apply the function.
-    if (node_->pipes) {
+    if (node_->subscribers) {
         int rc = xs_filter_subscribed (arg_, *buff_, buffsize_);
         errno_assert (rc == 0);
     }
@@ -555,7 +558,7 @@ void xs::prefix_filter_t::list (node_t *node_, unsigned char **buff_,
 
 bool xs::prefix_filter_t::is_redundant (node_t *node_)
 {
-    return !node_->pipes && node_->live_nodes == 0;
+    return !node_->subscribers && node_->live_nodes == 0;
 }
 
 //  Implementation of the C interface of the filter.

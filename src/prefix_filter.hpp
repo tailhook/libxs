@@ -33,8 +33,6 @@ namespace xs
     //  Canonical extension object.
     extern void *prefix_filter;
 
-    class pipe_t;
-
     class prefix_filter_t
     {
     public:
@@ -55,9 +53,10 @@ namespace xs
 
         struct node_t
         {
-            //  Pointer to particular pipe associated with the reference count.
-            typedef std::map <xs::pipe_t*, int> pipes_t;
-            pipes_t *pipes;
+            //  Pointer to particular subscriber associated with
+            //  the reference count.
+            typedef std::map <void*, int> subscribers_t;
+            subscribers_t *subscribers;
 
             unsigned char min;
             unsigned short count;
@@ -75,19 +74,19 @@ namespace xs
         //  Add key to the trie. Returns true if it's a new subscription
         //  rather than a duplicate.
         static bool add (node_t *node_, const unsigned char *prefix_,
-            size_t size_, xs::pipe_t *pipe_);
+            size_t size_, void *subscriber_);
 
         //  Remove specific subscription from the trie. Return true is it
         //  was actually removed rather than de-duplicated.
         static bool rm (node_t *node_, const unsigned char *prefix_,
-            size_t size_, xs::pipe_t *pipe_);
+            size_t size_, void *subscriber_);
 
         //  Remove all subscriptions for a specific peer from the trie.
         //  If there are no subscriptions left on some topics, invoke the
         //  supplied callback function.
-        static void rm (node_t *node_, xs::pipe_t *pipe_, void *arg_);
+        static void rm (node_t *node_, void *subscriber_, void *arg_);
 
-        static void rm_helper (node_t *node_, xs::pipe_t *pipe_,
+        static void rm_helper (node_t *node_, void *subscriber_,
             unsigned char **buff_, size_t buffsize_, size_t maxbuffsize_,
             void *arg_);
 
