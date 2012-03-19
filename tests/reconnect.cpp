@@ -54,6 +54,8 @@ int XS_TEST_MAIN ()
     rc = xs_close (pull);
     assert (rc == 0);
 
+#if !defined XS_HAVE_WINDOWS && !defined XS_HAVE_OPENVMS
+
     //  Now, let's test the same scenario with IPC.
     push = xs_socket (ctx, XS_PUSH);
     assert (push);
@@ -61,7 +63,7 @@ int XS_TEST_MAIN ()
     assert (push);
 
     //  Connect before bind was done at the peer and send one message.
-    rc = xs_connect (push, "tcp://127.0.0.1:5560");
+    rc = xs_connect (push, "ipc:///tmp/tester");
     assert (rc == 0);
     rc = xs_send (push, "ABC", 3, 0);
     assert (rc == 3);
@@ -70,7 +72,7 @@ int XS_TEST_MAIN ()
     sleep (1);
 
     //  Bind the peer and get the message.
-    rc = xs_bind (pull, "tcp://127.0.0.1:5560");
+    rc = xs_bind (pull, "ipc:///tmp/tester");
     assert (rc == 0);
     rc = xs_recv (pull, buf, sizeof (buf), 0);
     assert (rc == 3);
@@ -80,6 +82,9 @@ int XS_TEST_MAIN ()
     assert (rc == 0);
     rc = xs_close (pull);
     assert (rc == 0);
+
+#endif
+
     rc = xs_term (ctx);
     assert (rc == 0);
 
