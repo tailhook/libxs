@@ -20,7 +20,7 @@
 
 #include "testutil.hpp"
 
-#if defined XS_HAVE_WINDOWS
+#if defined XS_HAVE_WINDOWS || defined XS_HAVE_OPENVMS
 int XS_TEST_MAIN ()
 {
     return 0;
