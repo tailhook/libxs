@@ -56,6 +56,7 @@ xs::session_base_t *xs::session_base_t::create (class io_thread_t *io_thread_,
     case XS_XREQ:
         s = new (std::nothrow) xreq_session_t (io_thread_, connect_,
             socket_, options_, protocol_, address_);
+        break;
     case XS_REP:
         s = new (std::nothrow) rep_session_t (io_thread_, connect_,
             socket_, options_, protocol_, address_);
