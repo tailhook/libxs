@@ -179,3 +179,9 @@ int xs::req_session_t::write (msg_t *msg_)
     return -1;
 }
 
+void xs::req_session_t::detach ()
+{
+    state = options.recv_identity ? identity : bottom;
+    xreq_session_t::detach ();
+}
+

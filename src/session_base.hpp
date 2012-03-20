@@ -54,10 +54,12 @@ namespace xs
         void attach_pipe (xs::pipe_t *pipe_);
 
         //  Following functions are the interface exposed towards the engine.
+        //  They can be overloaded by specific session types to intercept
+        //  events coming from the engine.
         virtual int read (msg_t *msg_);
         virtual int write (msg_t *msg_);
-        void flush ();
-        void detach ();
+        virtual void flush ();
+        virtual void detach ();
 
         //  i_pipe_events interface implementation.
         void read_activated (xs::pipe_t *pipe_);
