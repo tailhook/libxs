@@ -114,7 +114,9 @@ xs::session_base_t::session_base_t (class io_thread_t *io_thread_,
     socket (socket_),
     io_thread (io_thread_),
     send_identity (options_.send_identity),
+    identity_sent (false),
     recv_identity (options_.recv_identity),
+    identity_recvd (false),
     linger_timer (NULL)
 {
     if (protocol_)
@@ -150,11 +152,11 @@ void xs::session_base_t::attach_pipe (pipe_t *pipe_)
 int xs::session_base_t::read (msg_t *msg_)
 {
     //  First message to send is identity (if required).
-    if (send_identity) {
+    if (send_identity && !identity_sent) {
         xs_assert (!(msg_->flags () & msg_t::more));
         msg_->init_size (options.identity_size);
         memcpy (msg_->data (), options.identity, options.identity_size);
-        send_identity = false;
+        identity_sent = true;
         incomplete_in = false;
         return 0;
     }
@@ -171,9 +173,9 @@ int xs::session_base_t::read (msg_t *msg_)
 int xs::session_base_t::write (msg_t *msg_)
 {
     //  First message to receive is identity (if required).
-    if (recv_identity) {
+    if (recv_identity && !identity_recvd) {
         msg_->set_flags (msg_t::identity);
-        recv_identity = false;
+        identity_recvd = true;
     }
 
     if (pipe && pipe->write (msg_)) {
@@ -300,6 +302,11 @@ void xs::session_base_t::detach ()
 {
     //  Engine is dead. Let's forget about it.
     engine = NULL;
+
+    //  In case identities are sent/received, remember we yet hato to send/recv
+    //  one from the new connection.
+    identity_sent = false;
+    identity_recvd = false;
 
     //  Remove any half-done messages from the pipes.
     clean_pipes ();

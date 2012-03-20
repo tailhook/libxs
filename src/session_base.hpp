@@ -118,9 +118,17 @@ namespace xs
         //  the engines into the same thread.
         xs::io_thread_t *io_thread;
 
-        //  If true, identity is to be sent/recvd from the network.
+        //  If true, identity is to be sent to the network.
         bool send_identity;
+
+        //  If true, identity was already sent to the current connection.
+        bool identity_sent;
+
+        //  If true, identity is to be received from the network.
         bool recv_identity;
+
+        //  If true, identity was already received from the current connection.
+        bool identity_recvd;
 
         //  Protocol and address to use when connecting.
         std::string protocol;
