@@ -22,7 +22,7 @@
 #ifndef __XS_OBJECT_HPP_INCLUDED__
 #define __XS_OBJECT_HPP_INCLUDED__
 
-#include "../include/xs_filter.h"
+#include "../include/xs.h"
 
 #include "stdint.hpp"
 

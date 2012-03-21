@@ -27,7 +27,7 @@
 #include <string>
 #include <stdarg.h>
 
-#include "../include/xs_filter.h"
+#include "../include/xs.h"
 
 #include "mailbox.hpp"
 #include "array.hpp"

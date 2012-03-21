@@ -23,7 +23,7 @@
 
 #include <vector>
 
-#include "../include/xs_filter.h"
+#include "../include/xs.h"
 
 #include "socket_base.hpp"
 #include "session_base.hpp"

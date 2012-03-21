@@ -382,9 +382,6 @@
     <ClInclude Include="..\..\..\src\io_thread.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\xs_filter.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\src\core.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
