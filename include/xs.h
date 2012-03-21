@@ -198,7 +198,6 @@ XS_EXPORT int xs_setctxopt (void *context, int option, const void *optval,
 #define XS_RCVTIMEO 27
 #define XS_SNDTIMEO 28
 #define XS_IPV4ONLY 31
-#define XS_FILTER 32
 
 /*  Message options                                                           */
 #define XS_MORE 1
@@ -262,6 +261,8 @@ XS_EXPORT unsigned long xs_stopwatch_stop (void *watch);
 /******************************************************************************/
 
 XS_EXPORT int xs_plug (void *context, void *extension);
+
+#define XS_FILTER 32
 
 #define XS_EXTENSION_FILTER 1
 
