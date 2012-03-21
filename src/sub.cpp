@@ -51,6 +51,7 @@ int xs::sub_t::xsetsockopt (int option_, const void *optval_,
     }
 
     //  Create the subscription message.
+#if defined XS_HAVE_PLUGGABLE_FILTERS
     msg_t msg;
     int rc = msg.init_size (optvallen_ + 4);
     errno_assert (rc == 0);
@@ -61,6 +62,17 @@ int xs::sub_t::xsetsockopt (int option_, const void *optval_,
         put_uint16 (data, XS_CMD_UNSUBSCRIBE);
     put_uint16 (data + 2, options.filter_id);
     memcpy (data + 4, optval_, optvallen_);
+#else
+    msg_t msg;
+    int rc = msg.init_size (optvallen_ + 1);
+    errno_assert (rc == 0);
+    unsigned char *data = (unsigned char*) msg.data ();
+    if (option_ == XS_SUBSCRIBE) 
+        data [0] = 1;
+    else if (option_ == XS_UNSUBSCRIBE)
+        data [0] = 0;
+    memcpy (data + 1, optval_, optvallen_);
+#endif
 
     //  Pass it further on in the stack.
     int err = 0;

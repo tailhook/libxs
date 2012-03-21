@@ -97,16 +97,26 @@ void xs::xpub_t::xread_activated (pipe_t *pipe_)
 
         //  TODO: In the case of malformed subscription we will simply ignore
         //  it for now. However, we should close the connection instead.
+#if defined XS_HAVE_PLUGGABLE_FILTERS
         if (size <= 4) {
+#else
+        if (size <= 1) {
+#endif
             sub.close ();
             return;
         }
+
+#if defined XS_HAVE_PLUGGABLE_FILTERS
         int cmd = get_uint16 (data);
         int filter_id = get_uint16 (data + 2);
         if (cmd != XS_CMD_SUBSCRIBE && cmd != XS_CMD_UNSUBSCRIBE) {
             sub.close ();
             return;
         }
+#else
+        int cmd = data [0] ? XS_CMD_SUBSCRIBE : XS_CMD_UNSUBSCRIBE;
+        int filter_id = XS_FILTER_PREFIX;
+#endif
 
         //  Find the relevant filter.
         filters_t::iterator it;
@@ -117,8 +127,13 @@ void xs::xpub_t::xread_activated (pipe_t *pipe_)
         bool unique;
 		if (cmd == XS_CMD_UNSUBSCRIBE) {
             xs_assert (it != filters.end ());
+#if defined XS_HAVE_PLUGGABLE_FILTERS
             unique = it->type->unsubscribe ((void*) (core_t*) this,
                 it->instance, pipe_, data + 4, size - 4) ? true : false;
+#else
+            unique = it->type->unsubscribe ((void*) (core_t*) this,
+                it->instance, pipe_, data + 1, size - 1) ? true : false;
+#endif
         }
 		else {
 
@@ -134,8 +149,13 @@ void xs::xpub_t::xread_activated (pipe_t *pipe_)
                 it = filters.end () - 1;
             }
 
+#if defined XS_HAVE_PLUGGABLE_FILTERS
             unique = it->type->subscribe ((void*) (core_t*) this, it->instance,
                 pipe_, data + 4, size - 4) ? true : false;
+#else
+            unique = it->type->subscribe ((void*) (core_t*) this, it->instance,
+                pipe_, data + 1, size - 1) ? true : false;
+#endif
         }
 
         //  If the subscription is not a duplicate store it so that it can be
@@ -229,10 +249,16 @@ int xs::xpub_t::filter_unsubscribed (const unsigned char *data_, size_t size_)
 
 		//  Place the unsubscription to the queue of pending (un)sunscriptions
 		//  to be retrived by the user later on.
+#if defined XS_HAVE_PLUGGABLE_FILTERS
 		blob_t unsub (size_ + 4, 0);
         put_uint16 ((unsigned char*) unsub.data (), XS_CMD_UNSUBSCRIBE);
         put_uint16 ((unsigned char*) unsub.data () + 2, tmp_filter_id);
 		memcpy ((void*) (unsub.data () + 4), data_, size_);
+#else
+		blob_t unsub (size_ + 1, 0);
+		unsub [0] = 0;
+		memcpy ((void*) (unsub.data () + 1), data_, size_);
+#endif
 		pending.push_back (unsub);
     }
 
