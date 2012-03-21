@@ -151,7 +151,6 @@ XS_EXPORT int xs_getmsgopt (xs_msg_t *msg, int option, void *optval,
 
 XS_EXPORT void *xs_init ();
 XS_EXPORT int xs_term (void *context);
-XS_EXPORT int xs_plug (void *context, void *extension);
 XS_EXPORT int xs_setctxopt (void *context, int option, const void *optval,
     size_t optvallen); 
 
@@ -261,6 +260,8 @@ XS_EXPORT unsigned long xs_stopwatch_stop (void *watch);
 /*  The API for pluggable filters.                                            */
 /*  THIS IS EXPERIMENTAL WORK AND MAY CHANGE WITHOUT PRIOR NOTICE.            */
 /******************************************************************************/
+
+XS_EXPORT int xs_plug (void *context, void *extension);
 
 #define XS_EXTENSION_FILTER 1
 
