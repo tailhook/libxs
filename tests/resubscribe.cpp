@@ -45,19 +45,31 @@ int XS_TEST_MAIN ()
     //  Check whether subscriptions are correctly received.
     char buf [5];
     rc = xs_recv (xpub, buf, sizeof (buf), 0);
+#if defined XS_HAVE_PLUGGABLE_FILTERS
     assert (rc == 5);
     assert (buf [0] == 0);
     assert (buf [1] == 1);
     assert (buf [2] == 0);
     assert (buf [3] == 1);
     assert (buf [4] == 'a');
+#else
+    assert (rc == 2);
+    assert (buf [0] == 1);
+    assert (buf [1] == 'a');
+#endif
     rc = xs_recv (xpub, buf, sizeof (buf), 0);
+#if defined XS_HAVE_PLUGGABLE_FILTERS
     assert (rc == 5);
     assert (buf [0] == 0);
     assert (buf [1] == 1);
     assert (buf [2] == 0);
     assert (buf [3] == 1);
     assert (buf [4] == 'b');
+#else
+    assert (rc == 2);
+    assert (buf [0] == 1);
+    assert (buf [1] == 'b');
+#endif
 
     //  Tear down the connection.
     rc = xs_close (xpub);
@@ -77,19 +89,31 @@ int XS_TEST_MAIN ()
 
     //  Check whether subscriptions are correctly generated.
     rc = xs_recv (xpub, buf, sizeof (buf), 0);
+#if defined XS_HAVE_PLUGGABLE_FILTERS
     assert (rc == 5);
     assert (buf [0] == 0);
     assert (buf [1] == 1);
     assert (buf [2] == 0);
     assert (buf [3] == 1);
     assert (buf [4] == 'a');
+#else
+    assert (rc == 2);
+    assert (buf [0] == 1);
+    assert (buf [1] == 'a');
+#endif
     rc = xs_recv (xpub, buf, sizeof (buf), 0);
+#if defined XS_HAVE_PLUGGABLE_FILTERS
     assert (rc == 5);
     assert (buf [0] == 0);
     assert (buf [1] == 1);
     assert (buf [2] == 0);
     assert (buf [3] == 1);
     assert (buf [4] == 'b');
+#else
+    assert (rc == 2);
+    assert (buf [0] == 1);
+    assert (buf [1] == 'b');
+#endif
 
     //  Clean up.
     rc = xs_close (sub);

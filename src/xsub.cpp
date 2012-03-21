@@ -109,16 +109,26 @@ int xs::xsub_t::xsend (msg_t *msg_, int flags_)
     unsigned char *data = (unsigned char*) msg_->data ();
 
     //  Malformed subscriptions.
+#if defined XS_HAVE_PLUGGABLE_FILTERS
     if (size < 4) {
+#else
+    if (size < 1) {
+#endif
         errno = EINVAL;
         return -1;
     }
+
+#if defined XS_HAVE_PLUGGABLE_FILTERS
     int cmd = get_uint16 (data);
     int filter_id = get_uint16 (data + 2);
     if (cmd != XS_CMD_SUBSCRIBE && cmd != XS_CMD_UNSUBSCRIBE) {
         errno = EINVAL;
         return -1;
     }
+#else
+    int cmd = data [0] ? XS_CMD_SUBSCRIBE : XS_CMD_UNSUBSCRIBE;
+    int filter_id = XS_FILTER_PREFIX;
+#endif
     
     //  Find the relevant filter.
     filters_t::iterator it;
@@ -140,16 +150,27 @@ int xs::xsub_t::xsend (msg_t *msg_, int flags_)
             it = filters.end () - 1;
         }
 
+#if defined XS_HAVE_PLUGGABLE_FILTERS
         if (it->type->subscribe ((void*) (core_t*) this, it->instance,
               NULL, data + 4, size - 4) == 1)
+#else
+        if (it->type->subscribe ((void*) (core_t*) this, it->instance,
+              NULL, data + 1, size - 1) == 1)
+#endif
             return dist.send_to_all (msg_, flags_);
         else
             return 0;
     }
     else if (cmd == XS_CMD_UNSUBSCRIBE) {
         xs_assert (it != filters.end ());
+
+#if defined XS_HAVE_PLUGGABLE_FILTERS
         if (it->type->unsubscribe ((void*) (core_t*) this, it->instance,
               NULL, data + 4, size - 4) == 1)
+#else
+        if (it->type->unsubscribe ((void*) (core_t*) this, it->instance,
+              NULL, data + 1, size - 1) == 1)
+#endif
             return dist.send_to_all (msg_, flags_);
         else
             return 0;
@@ -258,6 +279,7 @@ bool xs::xsub_t::match (msg_t *msg_)
 int xs::xsub_t::filter_subscribed (const unsigned char *data_, size_t size_)
 {
     //  Create the subsctription message.
+#if defined XS_HAVE_PLUGGABLE_FILTERS
     msg_t msg;
     int rc = msg.init_size (size_ + 4);
     xs_assert (rc == 0);
@@ -265,6 +287,15 @@ int xs::xsub_t::filter_subscribed (const unsigned char *data_, size_t size_)
     put_uint16 (data, XS_CMD_SUBSCRIBE);
     put_uint16 (data + 2, tmp_filter_id);
     memcpy (data + 4, data_, size_);
+#else
+    xs_assert (tmp_filter_id == XS_FILTER_PREFIX);
+    msg_t msg;
+    int rc = msg.init_size (size_ + 1);
+    xs_assert (rc == 0);
+    unsigned char *data = (unsigned char*) msg.data ();
+    data [0] = 1;
+    memcpy (data + 1, data_, size_);    
+#endif
 
     //  Send it to the pipe.
     bool sent = tmp_pipe->write (&msg);
