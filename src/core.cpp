@@ -18,7 +18,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "../include/xs_filter.h"
+#include "../include/xs.h"
 
 #include "core.hpp"
 #include "err.hpp"

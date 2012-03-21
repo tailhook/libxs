@@ -208,10 +208,6 @@ XS_EXPORT int xs_setctxopt (void *context, int option, const void *optval,
 #define XS_DONTWAIT 1
 #define XS_SNDMORE 2
 
-/*  Built-in message filters.                                                 */
-#define XS_FILTER_ALL 0
-#define XS_FILTER_PREFIX 1
-
 XS_EXPORT void *xs_socket (void *context, int type);
 XS_EXPORT int xs_close (void *s);
 XS_EXPORT int xs_setsockopt (void *s, int option, const void *optval,
@@ -260,6 +256,42 @@ XS_EXPORT void *xs_stopwatch_start (void);
 /*  Stops the stopwatch. Returns the number of microseconds elapsed since     */
 /*  the stopwatch was started.                                                */
 XS_EXPORT unsigned long xs_stopwatch_stop (void *watch);
+
+/******************************************************************************/
+/*  The API for pluggable filters.                                            */
+/*  THIS IS EXPERIMENTAL WORK AND MAY CHANGE WITHOUT PRIOR NOTICE.            */
+/******************************************************************************/
+
+#define XS_EXTENSION_FILTER 1
+
+#define XS_FILTER_ALL 0
+#define XS_FILTER_PREFIX 1
+
+typedef struct
+{
+    int extension_type;
+    int filter_id;
+    void *(*create) (void *core);
+    void (*destroy) (void *core, void *filter);
+    int (*subscribe) (void *core, void *filter, void *subscriber,
+        const unsigned char *data, size_t size);
+    int (*unsubscribe) (void *core, void *filter, void *subscriber,
+        const unsigned char *data, size_t size);
+    void (*unsubscribe_all) (void *core, void *filter, void *subscriber);
+    void (*enumerate) (void *core, void *filter);
+    int (*match) (void *core, void *filter,
+        const unsigned char *data, size_t size);
+    void (*match_all) (void *core, void *filter,
+        const unsigned char *data, size_t size);
+} xs_filter_t;
+
+XS_EXPORT int xs_filter_subscribed (void *core,
+    const unsigned char *data, size_t size);
+
+XS_EXPORT int xs_filter_unsubscribed (void *core,
+    const unsigned char *data, size_t size);
+
+XS_EXPORT int xs_filter_matching (void *core, void *subscriber);
 
 #undef XS_EXPORT
 

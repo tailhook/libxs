@@ -163,7 +163,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\include\xs.h" />
-    <ClInclude Include="..\..\..\include\xs_filter.h" />
     <ClInclude Include="..\..\..\include\zmq.h" />
     <ClInclude Include="..\..\..\src\array.hpp" />
     <ClInclude Include="..\..\..\src\atomic_counter.hpp" />

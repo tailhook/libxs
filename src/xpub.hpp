@@ -21,7 +21,7 @@
 #ifndef __XS_XPUB_HPP_INCLUDED__
 #define __XS_XPUB_HPP_INCLUDED__
 
-#include "../include/xs_filter.h"
+#include "../include/xs.h"
 
 #include <deque>
 #include <string>

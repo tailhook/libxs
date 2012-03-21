@@ -22,7 +22,6 @@
 #include <new>
 
 #include "../include/xs.h"
-#include "../include/xs_filter.h"
 
 #include "prefix_filter.hpp"
 #include "err.hpp"
