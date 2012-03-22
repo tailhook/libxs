@@ -234,6 +234,17 @@ int xs::signaler_t::make_fdpair (fd_t *r_, fd_t *w_)
 
 #elif defined XS_HAVE_WINDOWS
 
+    //  On Windows we are using TCP sockets for in-process communication.
+    //  That is a security hole -- other processes on the same box may connect
+    //  to the bound TCP port and hook into internal signal processing of
+    //  the library. To solve this problem we should use a proper in-process
+    //  signaling mechanism such as private semaphore. However, on Windows,
+    //  these cannot be polled on using select(). Other functions that allow
+    //  polling on these objects (e.g. WaitForMulitpleObjects) don't allow
+    //  to poll on sockets. Thus, the only way to fix the problem is to
+    //  implement IOCP polling mechanism that allows to poll on both sockets
+    //  and in-process synchronisation objects.
+
     //  This function has to be in a system-wide critical section so that
     //  two instances of the library don't accidentally create signaler
     //  crossing the process boundary.
