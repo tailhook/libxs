@@ -219,6 +219,7 @@ int xs::options_t::setsockopt (int option_, const void *optval_,
             return 0;
         }
 
+#if defined XS_HAVE_PLUGGABLE_FILTERS
     case XS_FILTER:
         if (optvallen_ != sizeof (int)) {
             errno = EINVAL;
@@ -226,6 +227,7 @@ int xs::options_t::setsockopt (int option_, const void *optval_,
         }
         filter_id = *((int*) optval_);
         return 0;
+#endif
 
     }
 
@@ -399,6 +401,7 @@ int xs::options_t::getsockopt (int option_, void *optval_, size_t *optvallen_)
         *optvallen_ = sizeof (int);
         return 0;
 
+#if defined XS_HAVE_PLUGGABLE_FILTERS
     case XS_FILTER:
         if (*optvallen_ < sizeof (int)) {
             errno = EINVAL;
@@ -407,6 +410,7 @@ int xs::options_t::getsockopt (int option_, void *optval_, size_t *optvallen_)
         *((int*) optval_) = filter_id;
         *optvallen_ = sizeof (int);
         return 0;
+#endif
 
     }
 

@@ -144,6 +144,11 @@ int xs_plug (void *ctx_, void *ext_)
         return -1;
     }
 
+#if !defined XS_HAVE_PLUGGABLE_FILTERS
+    errno = ENOTSUP;
+    return -1;
+#endif
+
     return ((xs::ctx_t*) ctx_)->plug (ext_);
 }
 
