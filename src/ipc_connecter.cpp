@@ -197,6 +197,12 @@ int xs::ipc_connecter_t::open ()
     if (rc == 0)
         return 0;
 
+    //  Asynchronous connect was launched.
+    if (rc == -1 && errno == EINPROGRESS) {
+        errno = EAGAIN;
+        return -1;
+    }
+
     //  Forward the error.
     return -1;
 }
