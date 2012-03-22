@@ -41,7 +41,7 @@ xs::xpub_t::~xpub_t ()
 {
     //  Deallocate all the filters.
     for (filters_t::iterator it = filters.begin (); it != filters.end (); ++it)
-        it->type->destroy ((void*) (core_t*) this, it->instance);
+        it->type->pf_destroy ((void*) (core_t*) this, it->instance);
 }
 
 void xs::xpub_t::xattach_pipe (pipe_t *pipe_, bool icanhasall_)
@@ -63,13 +63,13 @@ void xs::xpub_t::xattach_pipe (pipe_t *pipe_, bool icanhasall_)
             filter_t f;
             f.type = get_filter (XS_FILTER_PREFIX);
             xs_assert (f.type);
-            f.instance = f.type->create ((void*) (core_t*) this);
+            f.instance = f.type->pf_create ((void*) (core_t*) this);
             xs_assert (f.instance);
             filters.push_back (f);
             it = filters.end () - 1;
         }
 
-        it->type->subscribe ((void*) (core_t*) this, it->instance, pipe_,
+        it->type->pf_subscribe ((void*) (core_t*) this, it->instance, pipe_,
             NULL, 0);
     }
 
@@ -128,10 +128,10 @@ void xs::xpub_t::xread_activated (pipe_t *pipe_)
 		if (cmd == XS_CMD_UNSUBSCRIBE) {
             xs_assert (it != filters.end ());
 #if defined XS_HAVE_PLUGGABLE_FILTERS
-            unique = it->type->unsubscribe ((void*) (core_t*) this,
+            unique = it->type->pf_unsubscribe ((void*) (core_t*) this,
                 it->instance, pipe_, data + 4, size - 4) ? true : false;
 #else
-            unique = it->type->unsubscribe ((void*) (core_t*) this,
+            unique = it->type->pf_unsubscribe ((void*) (core_t*) this,
                 it->instance, pipe_, data + 1, size - 1) ? true : false;
 #endif
         }
@@ -143,18 +143,18 @@ void xs::xpub_t::xread_activated (pipe_t *pipe_)
                 filter_t f;
                 f.type = get_filter (filter_id);
                 xs_assert (f.type);
-                f.instance = f.type->create ((void*) (core_t*) this);
+                f.instance = f.type->pf_create ((void*) (core_t*) this);
                 xs_assert (f.instance);
                 filters.push_back (f);
                 it = filters.end () - 1;
             }
 
 #if defined XS_HAVE_PLUGGABLE_FILTERS
-            unique = it->type->subscribe ((void*) (core_t*) this, it->instance,
-                pipe_, data + 4, size - 4) ? true : false;
+            unique = it->type->pf_subscribe ((void*) (core_t*) this,
+                it->instance, pipe_, data + 4, size - 4) ? true : false;
 #else
-            unique = it->type->subscribe ((void*) (core_t*) this, it->instance,
-                pipe_, data + 1, size - 1) ? true : false;
+            unique = it->type->pf_subscribe ((void*) (core_t*) this,
+                it->instance, pipe_, data + 1, size - 1) ? true : false;
 #endif
         }
 
@@ -178,7 +178,7 @@ void xs::xpub_t::xterminated (pipe_t *pipe_)
     for (filters_t::iterator it = filters.begin (); it != filters.end ();
           ++it) {
         tmp_filter_id = it->type->filter_id;
-        it->type->unsubscribe_all ((void*) (core_t*) this, it->instance,
+        it->type->pf_unsubscribe_all ((void*) (core_t*) this, it->instance,
             (void*) pipe_);
         tmp_filter_id = -1;
     }
@@ -194,7 +194,7 @@ int xs::xpub_t::xsend (msg_t *msg_, int flags_)
     if (!more) {
         for (filters_t::iterator it = filters.begin (); it != filters.end ();
               ++it)
-            it->type->match_all ((void*) (core_t*) this, it->instance,
+            it->type->pf_match ((void*) (core_t*) this, it->instance,
                 (unsigned char*) msg_->data (), msg_->size ());
     }
 

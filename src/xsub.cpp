@@ -49,7 +49,7 @@ xs::xsub_t::~xsub_t ()
 {
     //  Deallocate all the filters.
     for (filters_t::iterator it = filters.begin (); it != filters.end (); ++it)
-        it->type->destroy ((void*) (core_t*) this, it->instance);
+        it->type->sf_destroy ((void*) (core_t*) this, it->instance);
 
     int rc = message.close ();
     errno_assert (rc == 0);
@@ -66,7 +66,7 @@ void xs::xsub_t::xattach_pipe (pipe_t *pipe_, bool icanhasall_)
     for (filters_t::iterator it = filters.begin (); it != filters.end ();
           ++it) {
         tmp_filter_id = it->type->filter_id;
-        it->type->enumerate ((void*) (core_t*) this, it->instance);
+        it->type->sf_enumerate ((void*) (core_t*) this, it->instance);
         tmp_filter_id = -1;
     }
     pipe_->flush ();
@@ -96,7 +96,7 @@ void xs::xsub_t::xhiccuped (pipe_t *pipe_)
     for (filters_t::iterator it = filters.begin (); it != filters.end ();
           ++it) {
         tmp_filter_id = it->type->filter_id;
-        it->type->enumerate ((void*) (core_t*) this, it->instance);
+        it->type->sf_enumerate ((void*) (core_t*) this, it->instance);
         tmp_filter_id = -1;
     }
     pipe_->flush ();
@@ -144,18 +144,18 @@ int xs::xsub_t::xsend (msg_t *msg_, int flags_)
             filter_t f;
             f.type = get_filter (filter_id);
             xs_assert (f.type);
-            f.instance = f.type->create ((void*) (core_t*) this);
+            f.instance = f.type->sf_create ((void*) (core_t*) this);
             xs_assert (f.instance);
             filters.push_back (f);
             it = filters.end () - 1;
         }
 
 #if defined XS_HAVE_PLUGGABLE_FILTERS
-        if (it->type->subscribe ((void*) (core_t*) this, it->instance,
-              NULL, data + 4, size - 4) == 1)
+        if (it->type->sf_subscribe ((void*) (core_t*) this,
+              it->instance, data + 4, size - 4) == 1)
 #else
-        if (it->type->subscribe ((void*) (core_t*) this, it->instance,
-              NULL, data + 1, size - 1) == 1)
+        if (it->type->sf_subscribe ((void*) (core_t*) this,
+              it->instance, data + 1, size - 1) == 1)
 #endif
             return dist.send_to_all (msg_, flags_);
         else
@@ -165,11 +165,11 @@ int xs::xsub_t::xsend (msg_t *msg_, int flags_)
         xs_assert (it != filters.end ());
 
 #if defined XS_HAVE_PLUGGABLE_FILTERS
-        if (it->type->unsubscribe ((void*) (core_t*) this, it->instance,
-              NULL, data + 4, size - 4) == 1)
+        if (it->type->sf_unsubscribe ((void*) (core_t*) this,
+              it->instance, data + 4, size - 4) == 1)
 #else
-        if (it->type->unsubscribe ((void*) (core_t*) this, it->instance,
-              NULL, data + 1, size - 1) == 1)
+        if (it->type->sf_unsubscribe ((void*) (core_t*) this,
+              it->instance, data + 1, size - 1) == 1)
 #endif
             return dist.send_to_all (msg_, flags_);
         else
@@ -270,7 +270,7 @@ bool xs::xsub_t::xhas_in ()
 bool xs::xsub_t::match (msg_t *msg_)
 {
     for (filters_t::iterator it = filters.begin (); it != filters.end (); ++it)
-        if (it->type->match ((void*) (core_t*) this, it->instance,
+        if (it->type->sf_match ((void*) (core_t*) this, it->instance,
               (unsigned char*) msg_->data (), msg_->size ()))
             return true;
     return false;

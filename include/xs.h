@@ -273,18 +273,27 @@ typedef struct
 {
     int extension_type;
     int filter_id;
-    void *(*create) (void *core);
-    void (*destroy) (void *core, void *filter);
-    int (*subscribe) (void *core, void *filter, void *subscriber,
+
+    void *(*pf_create) (void *core);
+    void (*pf_destroy) (void *core, void *pf);
+    int (*pf_subscribe) (void *core, void *pf, void *subscriber,
         const unsigned char *data, size_t size);
-    int (*unsubscribe) (void *core, void *filter, void *subscriber,
+    int (*pf_unsubscribe) (void *core, void *pf, void *subscriber,
         const unsigned char *data, size_t size);
-    void (*unsubscribe_all) (void *core, void *filter, void *subscriber);
-    void (*enumerate) (void *core, void *filter);
-    int (*match) (void *core, void *filter,
+    void (*pf_unsubscribe_all) (void *core, void *pf, void *subscriber);
+    void (*pf_match) (void *core, void *pf,
         const unsigned char *data, size_t size);
-    void (*match_all) (void *core, void *filter,
+
+    void *(*sf_create) (void *core);
+    void (*sf_destroy) (void *core, void *sf);
+    int (*sf_subscribe) (void *core, void *sf,
         const unsigned char *data, size_t size);
+    int (*sf_unsubscribe) (void *core, void *sf,
+        const unsigned char *data, size_t size);
+    void (*sf_enumerate) (void *core, void *sf);
+    int (*sf_match) (void *core, void *sf,
+        const unsigned char *data, size_t size);
+
 } xs_filter_t;
 
 XS_EXPORT int xs_filter_subscribed (void *core,

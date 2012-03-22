@@ -563,66 +563,95 @@ bool xs::prefix_filter_t::is_redundant (node_t *node_)
 //  Implementation of the C interface of the filter.
 //  Following functions convert raw C calls into calls to C++ object methods.
 
-static void *create (void *core_)
+static void *pf_create (void *core_)
 {
-    void *fset = (void*) new (std::nothrow) xs::prefix_filter_t;
-    alloc_assert (fset);
-    return fset;
+    void *pf = (void*) new (std::nothrow) xs::prefix_filter_t;
+    alloc_assert (pf);
+    return pf;
 }
 
-static void destroy (void *core_, void *filter_)
+static void pf_destroy (void *core_, void *pf_)
 {
-    delete (xs::prefix_filter_t*) filter_;
+    delete (xs::prefix_filter_t*) pf_;
 }
 
-static int subscribe (void *core_, void *filter_, void *subscriber_,
+static int pf_subscribe (void *core_, void *pf_, void *subscriber_,
     const unsigned char *data_, size_t size_)
 {
-    return ((xs::prefix_filter_t*) filter_)->subscribe (core_, subscriber_,
+    return ((xs::prefix_filter_t*) pf_)->subscribe (core_, subscriber_,
         data_, size_);
 }
 
-static int unsubscribe (void *core_, void *filter_, void *subscriber_,
+static int pf_unsubscribe (void *core_, void *pf_, void *subscriber_,
     const unsigned char *data_, size_t size_)
 {
-    return ((xs::prefix_filter_t*) filter_)->unsubscribe (core_, subscriber_,
+    return ((xs::prefix_filter_t*) pf_)->unsubscribe (core_, subscriber_,
         data_, size_);
 }
 
-static void unsubscribe_all (void *core_, void *filter_, void *subscriber_)
+static void pf_unsubscribe_all (void *core_, void *pf_, void *subscriber_)
 {
-    ((xs::prefix_filter_t*) filter_)->unsubscribe_all (core_, subscriber_);
+    ((xs::prefix_filter_t*) pf_)->unsubscribe_all (core_, subscriber_);
 }
 
-
-static void enumerate (void *core_, void *filter_)
-{
-    ((xs::prefix_filter_t*) filter_)->enumerate (core_);
-}
-
-static int match (void *core_, void *filter_,
+static void pf_match (void *core_, void *pf_,
     const unsigned char *data_, size_t size_)
 {
-    return ((xs::prefix_filter_t*) filter_)->match (core_, data_, size_);
+    ((xs::prefix_filter_t*) pf_)->match_all (core_, data_, size_);
 }
 
-static void match_all (void *core_, void *filter_,
+static void *sf_create (void *core_)
+{
+    void *sf = (void*) new (std::nothrow) xs::prefix_filter_t;
+    alloc_assert (sf);
+    return sf;
+}
+
+static void sf_destroy (void *core_, void *sf_)
+{
+    delete (xs::prefix_filter_t*) sf_;
+}
+
+static int sf_subscribe (void *core_, void *sf_,
     const unsigned char *data_, size_t size_)
 {
-    ((xs::prefix_filter_t*) filter_)->match_all (core_, data_, size_);
+    return ((xs::prefix_filter_t*) sf_)->subscribe (core_, NULL,
+        data_, size_);
+}
+
+static int sf_unsubscribe (void *core_, void *sf_,
+    const unsigned char *data_, size_t size_)
+{
+    return ((xs::prefix_filter_t*) sf_)->unsubscribe (core_, NULL,
+        data_, size_);
+}
+
+static void sf_enumerate (void *core_, void *sf_)
+{
+    ((xs::prefix_filter_t*) sf_)->enumerate (core_);
+}
+
+static int sf_match (void *core_, void *sf_,
+    const unsigned char *data_, size_t size_)
+{
+    return ((xs::prefix_filter_t*) sf_)->match (core_, data_, size_);
 }
 
 static xs_filter_t filter = {
     XS_EXTENSION_FILTER,
     XS_FILTER_PREFIX,
-    create,
-    destroy,
-    subscribe,
-    unsubscribe,
-    unsubscribe_all,
-    enumerate,
-    match,
-    match_all
+    pf_create,
+    pf_destroy,
+    pf_subscribe,
+    pf_unsubscribe,
+    pf_unsubscribe_all,
+    pf_match,
+    sf_create,
+    sf_destroy,
+    sf_subscribe,
+    sf_unsubscribe,
+    sf_enumerate,
+    sf_match,
 };
 
 void *xs::prefix_filter = (void*) &filter;
