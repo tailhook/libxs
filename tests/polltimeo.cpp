@@ -57,8 +57,10 @@ int XS_TEST_MAIN ()
     void *watch = xs_stopwatch_start ();
     rc = xs_poll (&pi, 1, 500);
     assert (rc == 0);
-    unsigned long elapsed = xs_stopwatch_stop (watch);
-    assert (elapsed > 440000 && elapsed < 550000);
+    unsigned long elapsed = xs_stopwatch_stop (watch) / 1000;
+#if !defined _WIN32 || !defined _DEBUG
+    assert (elapsed > 440 && elapsed < 550);
+#endif
 
     //  Check whether connection during the wait doesn't distort the timeout.
     void *thread = thread_create (polltimeo_worker, ctx);
@@ -66,8 +68,10 @@ int XS_TEST_MAIN ()
     watch = xs_stopwatch_start ();
     rc = xs_poll (&pi, 1, 2000);
     assert (rc == 0);
-    elapsed = xs_stopwatch_stop (watch);
-    assert (elapsed > 1900000 && elapsed < 2100000);
+    elapsed = xs_stopwatch_stop (watch) / 1000;
+#if !defined _WIN32 || !defined _DEBUG
+    assert (elapsed > 1900 && elapsed < 2100);
+#endif
     thread_join (thread);
 
     //  Clean-up.

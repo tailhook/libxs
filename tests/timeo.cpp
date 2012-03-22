@@ -65,8 +65,10 @@ int XS_TEST_MAIN ()
     rc = xs_recv (sb, buf, 32, 0);
     assert (rc == -1);
     assert (xs_errno () == EAGAIN);
-    unsigned long elapsed = xs_stopwatch_stop (watch);
-    assert (elapsed > 440000 && elapsed < 550000);
+    unsigned long elapsed = xs_stopwatch_stop (watch) / 1000;
+#if !defined _WIN32 || !defined _DEBUG
+    assert (elapsed > 440 && elapsed < 550);
+#endif
 
     //  Check whether connection during the wait doesn't distort the timeout.
     timeout = 2000;
@@ -78,8 +80,10 @@ int XS_TEST_MAIN ()
     rc = xs_recv (sb, buf, 32, 0);
     assert (rc == -1);
     assert (xs_errno () == EAGAIN);
-    elapsed = xs_stopwatch_stop (watch);
-    assert (elapsed > 1900000 && elapsed < 2100000);
+    elapsed = xs_stopwatch_stop (watch) / 1000;
+#if !defined _WIN32 || !defined _DEBUG
+    assert (elapsed > 1900 && elapsed < 2100);
+#endif
     thread_join (thread);
 
     //  Check that timeouts don't break normal message transfer.
