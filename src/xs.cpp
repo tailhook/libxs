@@ -152,6 +152,21 @@ int xs_plug (void *ctx_, void *ext_)
     return ((xs::ctx_t*) ctx_)->plug (ext_);
 }
 
+int xs_plug_library (void *ctx_, const char *filename_)
+{
+    if (!ctx_ || !((xs::ctx_t*) ctx_)->check_tag ()) {
+        errno = EFAULT;
+        return -1;
+    }
+
+#if !defined XS_HAVE_PLUGGABLE_FILTERS
+    errno = ENOTSUP;
+    return -1;
+#endif
+
+    return ((xs::ctx_t*) ctx_)->plug_library (filename_);
+}
+
 int xs_setctxopt (void *ctx_, int option_, const void *optval_,
     size_t optvallen_)
 {

@@ -95,6 +95,7 @@ case "${host_os}" in
             CPPFLAGS="-D_GNU_SOURCE $CPPFLAGS"
         fi
         AC_DEFINE(XS_HAVE_LINUX, 1, [Have Linux OS])
+        AC_CHECK_LIB(dl, dlopen)
 
         case "${host_os}" in
             *android*)

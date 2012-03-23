@@ -26,6 +26,10 @@
 #include <unistd.h>
 #endif
 
+#if defined XS_HAVE_LINUX
+#include <dlfcn.h>
+#endif
+
 #include <new>
 #include <string.h>
 
@@ -122,6 +126,15 @@ int xs::ctx_t::terminate ()
         slot_sync.unlock ();
     }
 
+    //  Unload any dynamically loaded extension libraries.
+#if defined XS_HAVE_LINUX
+    opt_sync.lock ();
+    for (extensions_t::iterator it = extensions.begin ();
+          it != extensions.end (); ++it)
+        dlclose (*it);
+    opt_sync.unlock ();
+#endif
+
     //  Deallocate the resources.
     delete this;
 
@@ -151,6 +164,49 @@ int xs::ctx_t::plug (void *ext_)
     //  the library.
     errno = ENOTSUP;
     return -1;
+}
+
+int xs::ctx_t::plug_library (const char *filename_)
+{
+    //  So far, dynamic loading of extension libraries is supported only
+    //  on Linux.
+#if !defined XS_HAVE_LINUX
+    errno = ENOTSUP;
+    return -1;
+#else
+
+    //  Open the specified dynamic library.
+    void *dl = dlopen (filename_, 0);
+    if (!dl) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    //  Find the initial entry point in the library.
+    dlerror ();
+    void **ext = (void**) dlsym (dl, "xs_extension");
+    if (!dlerror ()) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    //  Plug the extension into the context.
+    int rc = plug (*ext);
+    if (rc != 0) {
+        int err = errno;
+        dlclose (dl);
+        errno = err;
+        return -1;
+    }
+
+    //  Store the library handle so that we can unload it
+    //  when context is terminated.
+    opt_sync.lock ();
+    extensions.push_back (dl);
+    opt_sync.unlock ();
+
+    return 0;
+#endif
 }
 
 int xs::ctx_t::setctxopt (int option_, const void *optval_, size_t optvallen_)

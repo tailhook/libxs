@@ -74,6 +74,7 @@ namespace xs
 
         //  Plug in the extension specified.
         int plug (void *ext_);
+        int plug_library (const char *filename_);
 
         //  Set context option.
         int setctxopt (int option_, const void *optval_, size_t optvallen_);
@@ -169,6 +170,10 @@ namespace xs
 
         //  Synchronisation of access to context options & extensions.
         mutex_t opt_sync;
+
+        //  List of all dynamically loaded extension libraries.
+        typedef std::vector <void*> extensions_t;
+        extensions_t extensions;
 
         //  List of all filters plugged into the context.
         typedef std::map <int, xs_filter_t*> filters_t;
