@@ -260,7 +260,7 @@ XS_EXPORT unsigned long xs_stopwatch_stop (void *watch);
 /*  THIS IS EXPERIMENTAL WORK AND MAY CHANGE WITHOUT PRIOR NOTICE.            */
 /******************************************************************************/
 
-XS_EXPORT int xs_plug (void *context, void *filename);
+XS_EXPORT int xs_plug (void *context, const char *filename);
 
 #define XS_FILTER 32
 

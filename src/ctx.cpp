@@ -32,6 +32,7 @@
 
 #include <new>
 #include <string.h>
+#include <stdio.h>
 
 #include "ctx.hpp"
 #include "socket_base.hpp"
@@ -176,8 +177,9 @@ int xs::ctx_t::plug_library (const char *filename_)
 #else
 
     //  Open the specified dynamic library.
-    void *dl = dlopen (filename_, 0);
+    void *dl = dlopen (filename_, RTLD_LOCAL | RTLD_NOW);
     if (!dl) {
+        fprintf (stderr, "%s\n", dlerror ());
         errno = EINVAL;
         return -1;
     }
@@ -185,7 +187,8 @@ int xs::ctx_t::plug_library (const char *filename_)
     //  Find the initial entry point in the library.
     dlerror ();
     void **ext = (void**) dlsym (dl, "xs_extension");
-    if (!dlerror ()) {
+    if (!ext) {
+        fprintf (stderr, "%s\n", dlerror ());
         errno = EINVAL;
         return -1;
     }
