@@ -21,13 +21,28 @@
 
 #include "testutil.hpp"
 
+#if defined XS_HAVE_WINDOWS
+#include <winsock2.h>
+#else
 #include <sys/socket.h>
+#include <netinet/tcp.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#endif
 
 int XS_TEST_MAIN ()
 {
     fprintf (stderr, "wire format test running...\n");
+
+#if defined XS_HAVE_WINDOWS
+    WSADATA info;
+    if (WSAStartup(MAKEWORD(1,1), &info) != 0)
+    {
+      fprintf(stderr,
+          "Could not find suitable windows socket dll\n");
+      exit(1);  // or some other suitable exit code
+    }
+#endif
 
     //  Create the basic infrastructure.
     void *ctx = xs_init ();
@@ -44,7 +59,7 @@ int XS_TEST_MAIN ()
     assert (rc == 0);
 
     // Connect to the peer using raw sockets
-    int rpush = socket(AF_INET, SOCK_STREAM, 0);
+    int rpush = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     struct sockaddr_in address;
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = inet_addr("127.0.0.1");
@@ -52,7 +67,7 @@ int XS_TEST_MAIN ()
     rc = connect(rpush, (struct sockaddr *)&address, sizeof(address));
     assert (rc == 0);
 
-    int rpull = socket(AF_INET, SOCK_STREAM, 0);
+    int rpull = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = inet_addr("127.0.0.1");
     address.sin_port = htons(5561);
@@ -60,7 +75,7 @@ int XS_TEST_MAIN ()
     assert (rc == 0);
 
     // Let's send some data and check if it arrived
-    rc = write(rpush, "\x04\0abc", 5);
+    rc = send(rpush, "\x04\0abc", 5, 0);
     assert (rc == 5);
     unsigned char buf [3], buf2 [3];
     rc = xs_recv (pull, buf, sizeof (buf), 0);
@@ -70,14 +85,22 @@ int XS_TEST_MAIN ()
     // Let's push this data into another socket
     rc = xs_send(push, buf, sizeof (buf), 0);
     assert (rc == 3);
-    rc = read(rpull, &buf2, sizeof (buf2));
+    rc = recv(rpull, &buf2, sizeof (buf2), 0);
     assert (rc == 3);
     assert (!memcmp(buf2, "\x04\0abc", 3));
 
+#if defined XS_HAVE_WINDOWS
+    rc = closesocket(rpush);
+    assert (rc != SOCKET_ERROR);
+    rc = closesocket(rpull);
+    assert (rc != SOCKET_ERROR);
+    WSACleanup();
+#else
     rc = close(rpush);
     assert (rc == 0);
     rc = close(rpull);
     assert (rc == 0);
+#endif
     rc = xs_close(pull);
     assert (rc == 0);
     rc = xs_close(push);
