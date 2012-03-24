@@ -99,10 +99,14 @@
 #include "polltimeo.cpp"
 #undef XS_TEST_MAIN
 
+#define XS_TEST_MAIN wireformat
+#include "wireformat.cpp"
+#undef XS_TEST_MAIN
+
 int main ()
 {
     int rc;
-
+	/*
     rc = hwm ();
     assert (rc == 0);
     rc = invalid_rep ();
@@ -136,6 +140,9 @@ int main ()
     rc = emptyctx ();
     assert (rc == 0);
     rc = polltimeo ();
+    assert (rc == 0);
+	*/
+    rc = wireformat ();
     assert (rc == 0);
 
     fprintf (stderr, "SUCCESS\n");
