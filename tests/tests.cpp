@@ -106,7 +106,6 @@
 int main ()
 {
     int rc;
-	/*
     rc = hwm ();
     assert (rc == 0);
     rc = invalid_rep ();
@@ -141,7 +140,6 @@ int main ()
     assert (rc == 0);
     rc = polltimeo ();
     assert (rc == 0);
-	*/
     rc = wireformat ();
     assert (rc == 0);
 
